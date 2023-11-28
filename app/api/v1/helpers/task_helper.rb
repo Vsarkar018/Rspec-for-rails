@@ -13,11 +13,6 @@ module V1
         task = Task.create!(user_id:user_id,tasks:params[:tasks],status:params[:status])
       rescue => error
         raise error
-        # if task.save!
-        #   task
-        # else
-        #   raise Error.new("Something went while creating task",500)
-        # end
       end
 
       def get_all_tasks(user_id)
@@ -29,8 +24,9 @@ module V1
         end
       end
       def get_task(id)
-        # byebug
         task = Task.find(id)
+        p task
+        byebug
         if task.eql?(nil)
           raise Error.new("Unable to the fetch the task", 500)
         else

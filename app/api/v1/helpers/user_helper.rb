@@ -9,12 +9,9 @@ module V1
         end
       end
       def get_user(email)
-        user = User.find_by!(email: email)
-        if user
-          user
-        else
-          raise Error.new("Unable to fetch user",500)
-        end
+        User.find_by!(email: email)
+      rescue => error
+        raise error
       end
     end
   end

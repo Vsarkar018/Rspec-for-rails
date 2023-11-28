@@ -21,7 +21,6 @@ module V1
       post do
         token = AUTH_HELPER.new.verify_token(headers["Authorization"])
         data = JwtService.decode(token)
-        # byebug
         task = TASK_HELPER.new.create_task(data[:user][:user_id],params)
       end
 
@@ -35,9 +34,6 @@ module V1
 
 
       desc "Get a single task"
-      params do
-        requires :id, type: Integer , desc: "Id of the tasks"
-      end
       get ':id' do
         AUTH_HELPER.new.verify_token(headers["Authorization"])
         task = TASK_HELPER.new.get_task(params[:id])

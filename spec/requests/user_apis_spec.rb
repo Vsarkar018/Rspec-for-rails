@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe "UserApis", type: :request do
   describe "GET /api/v1/user" do
     context "when authorized" do
-      before :each do
+      before :all do
         @user = FactoryBot.create(:user)
         @headers = {'Authorization' => "Bearer #{JwtService.generate_token({user:{user_id:@user.id,email:@user.email,name:@user.name}})}"}
       end
