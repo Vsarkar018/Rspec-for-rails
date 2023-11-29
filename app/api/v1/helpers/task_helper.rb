@@ -25,9 +25,7 @@ module V1
       end
       def get_task(id)
         task = Task.find(id)
-        p task
-        byebug
-        if task.eql?(nil)
+        if task.eql?(nil) || !task
           raise Error.new("Unable to the fetch the task", 500)
         else
           task
@@ -45,9 +43,12 @@ module V1
       end
 
       def delete_task(id)
-        task = Task.delete(id:id)
-        if task ==1 || task == 0
-          task
+        task = Task.delete(id)
+        if task ==1
+          status = 200
+          {message: "task deleted Successfully"}
+        elsif task == 0
+          raise Error.new("Task with id #{id} doesn't exits",400)
         else
           raise Error.new("Unable to delete the task",500)
         end

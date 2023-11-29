@@ -10,7 +10,9 @@ module V1
     rescue_from TASK_HELPER::Error do |e|
       error!({error:e.message},e.status)
     end
-
+    rescue_from AUTH_HELPER::Error do |e|
+      error!({error:e.message},e.status)
+    end
     resource :tasks do
       desc "Create a task"
 
@@ -41,7 +43,6 @@ module V1
 
       desc "Update the task"
       params do
-        requires :id, type: Integer, desc: "Id of the task"
         requires :status, type: Symbol, values: [:completed, :pending, :inprogress, :discarded], desc: "Status of the task"
       end
       patch ':id' do
@@ -50,18 +51,9 @@ module V1
       end
 
       desc "Delete the task"
-      params do
-        requires :id, type: Integer, desc: "Id of the task"
-      end
       delete ':id' do
         AUTH_HELPER.new.verify_token(headers["Authorization"])
-        task = TASK_HELPER.new.delete_task(params[:id])
-        if task == 1
-          status 200
-          return {message: "Task deleted successfully"}
-        end
-        status 400
-        {message: "task not available"}
+        TASK_HELPER.new.delete_task(params[:id])
       end
     end
   end

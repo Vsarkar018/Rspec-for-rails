@@ -4,13 +4,19 @@ RSpec.describe "TaskApis", type: :request do
   describe " /api/v1/tasks" do
     context "When authorized" do
       before :all do
+        # byebug
         @task = FactoryBot.create(:task, :pending)
+        # byebug
         @headers = {'Authorization' => "Bearer #{JwtService.generate_token({user:{user_id:@task.user_id}})}"}
       end
+
       context "Create Task" do
         it "with valid parameters" do
+          # byebug
           post '/api/v1/tasks' , params: {tasks: @task.tasks, status: @task.status} , headers: @headers
+          # byebug
           expect(response).to have_http_status(201)
+          # byebug
           expected_attr =  JSON.parse(@task.to_json).except('id','created_at','updated_at')
           actual_attr = json_response.except('id','created_at','updated_at')
           expect(actual_attr).to eq(expected_attr)
@@ -42,8 +48,21 @@ RSpec.describe "TaskApis", type: :request do
     end
 
     context "When not authorized" do
+      context "Create task" do
+        it "return 401" do
+          post '/api/v1/tasks' , params: {tasks: "", status: :pending}
+          expect(response).to have_http_status(401)
+          expect(json_response['error']).to eq("Authorization failed")
+        end
+      end
+      context "Get all task" do
+        it "return 401" do
+          get '/api/v1/tasks'
+          expect(response).to have_http_status(401)
+          expect(json_response['error']).to eq("Authorization failed")
+        end
+      end
     end
-
   end
 
 
@@ -63,91 +82,57 @@ RSpec.describe "TaskApis", type: :request do
           actual_attr = json_response.except('created_at','updated_at')
           expect(expected_attr).to eq(actual_attr)
         end
+      end
 
-        it "returns an error for invalid id" do
-          get '/api/v1/50000'
+      context "Update the task" do
+        it 'returns the updated task' do
+          patch "/api/v1/tasks/#{@task.id}", headers: @headers , params: {status: @task.status}
+          expect(response).to have_http_status(200)
+          expect(json_response['status']).to eq(@task.status)
+        end
+        it "returns error for invalid or missing status" do
+          patch "/api/v1/tasks/#{@task.id}", headers: @headers , params: {status: "invalid"}
+          expect(response).to have_http_status(400)
+          expect(json_response['error']).to be_present
+        end
+      end
 
+      context "Delete the task" do
+        it "return 200 with valid id" do
+          delete "/api/v1/tasks/#{@task.id}", headers: @headers
+          expect(response).to have_http_status(200)
+          expect(json_response['message']).to eq("task deleted Successfully")
+        end
+        it "returns 400 with invalid id" do
+          delete "/api/v1/tasks/#{40000}", headers: @headers
+          expect(response).to have_http_status(400)
+          expect(json_response['error']).to be_present
+        end
+      end
+    end
+    context "when not authorized" do
+      context "Get single tasks" do
+        it "return 401" do
+          get '/api/v1/tasks/34'
+          expect(response).to have_http_status(401)
+          expect(json_response['error']).to eq("Authorization failed")
+        end
+      end
+
+      context "Update tasks" do
+        it "return 401" do
+          patch '/api/v1/tasks/34' ,params: {status: :pending}
+          expect(response).to have_http_status(401)
+          expect(json_response['error']).to eq("Authorization failed")
+        end
+      end
+      context "Delete tasks" do
+        it "return 401" do
+          delete '/api/v1/tasks/34'
+          expect(response).to have_http_status(401)
+          expect(json_response['error']).to eq("Authorization failed")
         end
       end
     end
   end
-
-
 end
-
-# # spec/api/v1/task_api_spec.rb
-# require 'rails_helper'
-#
-# RSpec.describe V1::TaskApi, type: :request do
-#   let(:user) { create(:user) }
-#   let(:headers) { { 'Authorization' => JwtService.encode(user_id: user.id) } }
-#
-#   describe 'POST /v1/tasks' do
-#     it 'creates a task' do
-#       post '/v1/tasks', params: { tasks: 'Sample Task', status: :pending }, headers: headers
-#       expect(response).to have_http_status(201)
-#       expect(json_response['message']).to eq('Task created successfully')
-#     end
-#
-#     it 'returns an error for invalid parameters' do
-#       post '/v1/tasks', params: { status: :pending }, headers: headers
-#       expect(response).to have_http_status(400)
-#       expect(json_response['error']).to be_present
-#     end
-#   end
-#
-#   describe 'GET /v1/tasks' do
-#     it 'gets all tasks' do
-#       create_list(:task, 3, user: user)
-#       get '/v1/tasks', headers: headers
-#       expect(response).to have_http_status(200)
-#       expect(json_response).to be_an(Array)
-#       expect(json_response.size).to eq(3)
-#     end
-#   end
-#
-#   describe 'GET /v1/tasks/:id' do
-#     it 'gets a single task' do
-#       task = create(:task, user: user)
-#       get "/v1/tasks/#{task.id}", headers: headers
-#       expect(response).to have_http_status(200)
-#       expect(json_response['tasks']).to eq(task.tasks)
-#     end
-#
-#     it 'returns an error for invalid task id' do
-#       get '/v1/tasks/999', headers: headers
-#       expect(response).to have_http_status(404)
-#       expect(json_response['error']).to be_present
-#     end
-#   end
-#
-#   describe 'PATCH /v1/tasks/:id' do
-#     it 'updates the task' do
-#       task = create(:task, user: user)
-#       patch "/v1/tasks/#{task.id}", params: { status: :completed }, headers: headers
-#       expect(response).to have_http_status(200)
-#       expect(json_response['message']).to eq('Task updated successfully')
-#     end
-#
-#     it 'returns an error for invalid task id' do
-#       patch '/v1/tasks/999', params: { status: :completed }, headers: headers
-#       expect(response).to have_http_status(404)
-#       expect(json_response['error']).to be_present
-#     end
-#   end
-#
-#   describe 'DELETE /v1/tasks/:id' do
-#     it 'deletes the task' do
-#       task = create(:task, user: user)
-#       delete "/v1/tasks/#{task.id}", headers: headers
-#       expect(response).to have_http_status(200)
-#       expect(json_response['message']).to eq('Task deleted successfully')
-#     end
-#
-#     it 'returns an error for invalid task id' do
-#       delete '/v1/tasks/999', headers: headers
-#       expect(response).to have_http_status(404)
-#       expect(json_response['error']).to be_present
-#     end
-#   end
-# end
