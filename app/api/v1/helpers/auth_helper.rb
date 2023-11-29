@@ -36,7 +36,7 @@ module V1
             raise Error.new("Authorization failed",401)
           end
           token = auth_header.split(" ")[1]
-          if token.nil? || token.empty? || token == "null"
+          if token.blank?
             raise Error.new("Authorization failed",401)
           end
           token

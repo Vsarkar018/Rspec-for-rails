@@ -4,4 +4,5 @@ class Task < ApplicationRecord
 
   validates :tasks, presence: true
   validates :status, presence: true
+  validates :user, presence:true
 end

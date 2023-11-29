@@ -10,7 +10,7 @@ module V1
       end
 
       def create_task(user_id,params)
-        task = Task.create!(user_id:user_id,tasks:params[:tasks],status:params[:status])
+        Task.create!(user_id:user_id,tasks:params[:tasks],status:params[:status])
       rescue => error
         raise error
       end
@@ -24,8 +24,9 @@ module V1
         end
       end
       def get_task(id)
-        task = Task.find(id)
-        if task.eql?(nil) || !task
+        task = Task.find_by_id(id)
+
+        if task.blank?
           raise Error.new("Unable to the fetch the task", 500)
         else
           task
