@@ -12,10 +12,10 @@ module V1
 
       def signup_user(params)
         user = User.new(name: params[:name],email: params[:email] , password: params[:password])
-        if user.save!
+        if user.save
           user
         else
-          raise Error.new("Something went wrong",500)
+          raise Error.new("Something went wrong",422)
         end
       end
 
